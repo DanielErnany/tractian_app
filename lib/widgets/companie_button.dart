@@ -3,17 +3,17 @@ import 'package:tractian_app/utils/images.dart';
 
 class CompanieButton extends StatelessWidget {
   String name;
-  String id;
+  Function() onPressed;
   CompanieButton({
     Key? key,
     required this.name,
-    required this.id,
+    required this.onPressed,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: (() {}),
+      onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.only(left: 30),
         shape: RoundedRectangleBorder(

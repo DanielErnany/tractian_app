@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tractian_app/utils/images.dart';
+import 'package:tractian_app/utils/routes.dart';
 import 'package:tractian_app/widgets/companie_button.dart';
 
 import '../models/companie.dart';
@@ -22,7 +23,6 @@ class _MenuPageState extends State<MenuPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
         title: SizedBox(
           height: 25,
           child: Image.asset(Images.tractianLogo),
@@ -42,7 +42,11 @@ class _MenuPageState extends State<MenuPage> {
             height: 100,
             child: CompanieButton(
               name: _companies[index].name,
-              id: _companies[index].id,
+              onPressed: () {
+                Navigator.of(context).pushNamed(
+                  AppRoutes.assetsPage,
+                );
+              },
             ),
           );
         },
