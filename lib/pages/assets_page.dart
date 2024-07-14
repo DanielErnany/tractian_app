@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:tractian_app/models/asset.dart';
 import 'package:tractian_app/models/component.dart';
 import 'package:tractian_app/models/location.dart';
+import 'package:tractian_app/providers/assets_provider.dart';
 import 'package:tractian_app/widgets/filter_button.dart';
 import 'package:tractian_app/widgets/tree_view.dart';
 
@@ -14,6 +16,34 @@ class AssetsPage extends StatefulWidget {
 
 class _AssetsPageState extends State<AssetsPage> {
   EdgeInsets leftPadding = const EdgeInsets.only(left: 15);
+
+  late String companieId;
+
+  late List<Location> _locations;
+
+  bool _isLoading = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    companieId = ModalRoute.of(context)?.settings.arguments as String;
+
+    loadDatas();
+  }
+
+  void loadDatas() async {
+    setState(() {
+      _isLoading = true;
+    });
+    final provider = Provider.of<AssetsProvider>(context, listen: false);
+    await provider.loadLocations(companieId: companieId);
+
+    _locations = provider.locations;
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   Widget buildComponentNode(Component component) {
     return TreeView(
@@ -100,64 +130,60 @@ class _AssetsPageState extends State<AssetsPage> {
           icon: const Icon(Icons.arrow_back_ios_new_sharp),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 25),
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25),
-            child: Column(
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : ListView(
+              padding: const EdgeInsets.symmetric(vertical: 25),
               children: [
-                Container(
-                  height: 50,
-                  padding: const EdgeInsets.only(left: 10),
-                  color: const Color.fromRGBO(234, 239, 243, 1),
-                  child: Row(
-                    children: const [
-                      Icon(Icons.search),
-                      Text("Buscar Ativo ou Local")
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 25),
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 50,
+                        padding: const EdgeInsets.only(left: 10),
+                        color: const Color.fromRGBO(234, 239, 243, 1),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.search),
+                            Text("Buscar Ativo ou Local")
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(children: [
+                        FilterButton(
+                          icon: Icons.flash_on,
+                          text: "Sensor de energia",
+                          onPressed: () {},
+                        ),
+                        const Spacer(flex: 1),
+                        FilterButton(
+                          icon: Icons.error,
+                          text: "Crítico",
+                          onPressed: () {},
+                        ),
+                        const Spacer(flex: 3),
+                      ])
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(children: [
-                  FilterButton(
-                    icon: Icons.flash_on,
-                    text: "Sensor de energia",
-                    onPressed: () {},
-                  ),
-                  const Spacer(flex: 1),
-                  FilterButton(
-                    icon: Icons.error,
-                    text: "Crítico",
-                    onPressed: () {},
-                  ),
-                  const Spacer(flex: 3),
-                ])
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Divider(thickness: 1.5),
-          TreeView(
-            title: productionAreaRawMaterial.name,
-            padding: leftPadding,
-            iconImage: productionAreaRawMaterial.imageIcon,
-            children: productionAreaRawMaterial.subLocations
-                .map((subLocation) => buildLocationNode(
-                      subLocation,
-                    ))
-                .toList(),
-          ),
-          TreeView(
-            title: fanExternal.name,
-            iconImage: fanExternal.imageIcon,
-            padding: leftPadding,
-            statusWidget: fanExternal.statusWidget,
-            sensorTypeIcon: fanExternal.sensorTypeIcon,
-            children: const [],
-          ),
-        ],
-      ),
+                const SizedBox(height: 10),
+                const Divider(thickness: 1.5),
+                ..._locations
+                    .map((location) => TreeView(
+                          title: location.name,
+                          padding: leftPadding,
+                          iconImage: location.imageIcon,
+                          children: location.subLocations
+                              .map((subLocation) => buildLocationNode(
+                                    subLocation,
+                                  ))
+                              .toList(),
+                        ))
+                    .toList(),
     );
   }
 }

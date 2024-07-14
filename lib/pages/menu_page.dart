@@ -95,6 +95,7 @@ class _MenuPageState extends State<MenuPage> {
                         onPressed: () {
                           Navigator.of(context).pushNamed(
                             AppRoutes.assetsPage,
+                            arguments: _companies[index].id,
                           );
                         },
                       ),
