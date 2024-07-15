@@ -55,7 +55,7 @@ class _AssetsPageState extends State<AssetsPage> {
       title: component.name,
       iconImage: component.imageIcon,
       padding: leftPadding,
-      sensorTypeIcon: component.sensorTypeIcon,
+        sensorType: component.sensorType,
       statusWidget: component.statusWidget,
       children: const [],
     );

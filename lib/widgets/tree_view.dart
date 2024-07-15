@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tractian_app/models/component.dart';
 
 class TreeView extends StatelessWidget {
   final String title;
-  final IconData? sensorTypeIcon;
+  final SensorType? sensorType;
   final Widget? statusWidget;
   final String? iconImage;
   final List<Widget> children;
@@ -14,7 +15,7 @@ class TreeView extends StatelessWidget {
     required this.children,
     this.iconImage,
     this.padding,
-    this.sensorTypeIcon,
+    this.sensorType,
     this.statusWidget,
   });
 
@@ -43,7 +44,10 @@ class TreeView extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (sensorTypeIcon != null) Icon(sensorTypeIcon, color: Colors.green),
+        if (sensorType != null)
+          Icon(
+            sensorType!.toIcon(),
+          ),
         if (statusWidget != null) statusWidget!,
       ],
     );

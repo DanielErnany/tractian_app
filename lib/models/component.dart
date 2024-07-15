@@ -52,6 +52,17 @@ enum SensorType {
     }
   }
 
+  @override
+  IconData toIcon() {
+    switch (this) {
+      case SensorType.energy:
+        return Icons.flash_on;
+
+      case SensorType.vibration:
+        return Icons.sensors;
+    }
+  }
+
   static SensorType? fromString(String string) {
     Map<String, SensorType> valuesMap = {};
 
@@ -83,7 +94,6 @@ class Component extends Item {
   @override
   String get imageIcon => Images.componentIcon;
 
-  IconData? get sensorTypeIcon => Icons.flash_on;
   Widget? get statusWidget {
     double radio = 20;
 
