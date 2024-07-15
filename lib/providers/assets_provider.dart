@@ -72,21 +72,26 @@ class AssetsProvider extends ChangeNotifier {
   Future<void> _loadAssets({required String companieId}) async {
     final response =
         await http.get(Uri.parse(Requests.assets(companieId: companieId)));
+
     if (response.statusCode > 200) {
       throw Exception('Failed to load assets');
     }
 
     final List<dynamic> itemDecodedData = jsonDecode(response.body);
-    final List<Item> items = [];
+    final List<Item> items =
+        itemDecodedData.map((data) => createItem(data)).toList();
 
-    for (var data in itemDecodedData) {
-      Item item = createItem(data);
-      items.add(item);
-    }
+    final List<Item> rootItems = _associateComponentsAndAssets(items);
+    final List<String> itemsInLocation = _associateAssetsToLocation(rootItems);
 
+    _removeItemsInLocation(rootItems, itemsInLocation);
+    _associateLocationsAndSubLocations();
+
+    _items = rootItems;
+  }
+
+  List<Item> _associateComponentsAndAssets(List<Item> items) {
     final List<Item> rootItems = [];
-
-// Associa Components e Assets e Assets e SubAssts
     for (var item in items) {
       if (item.parentId == null) {
         rootItems.add(item);
@@ -100,9 +105,11 @@ class AssetsProvider extends ChangeNotifier {
         }
       }
     }
+    return rootItems;
+  }
 
-    List<String> itemsInLocation = [];
-// Associa Assets e Componets a Location
+  List<String> _associateAssetsToLocation(List<Item> rootItems) {
+    final List<String> itemsInLocation = [];
     for (Item item in rootItems) {
       if (item.locationId != null) {
         Location location =
@@ -115,29 +122,29 @@ class AssetsProvider extends ChangeNotifier {
         }
       }
     }
+    return itemsInLocation;
+  }
 
-// Remove Items que já estão em uma Location
+  void _removeItemsInLocation(
+      List<Item> rootItems, List<String> itemsInLocation) {
     for (var itemId in itemsInLocation) {
       rootItems.removeWhere((element) => element.id == itemId);
     }
+  }
 
-// Associa Locations e SubLocations
+  void _associateLocationsAndSubLocations() {
     List<String> subLocations = [];
     for (var location in _locations) {
       if (location.parentId != null) {
         subLocations.add(location.id);
         Location parent =
             _locations.firstWhere((element) => element.id == location.parentId);
-
         parent.subLocations.add(location);
       }
     }
-    // Remove sublocations que já estão em uma Location
     for (var locationId in subLocations) {
       _locations.removeWhere((element) => element.id == locationId);
     }
-
-    _items = rootItems;
   }
 
   Item createItem(Map<String, dynamic> map) {
