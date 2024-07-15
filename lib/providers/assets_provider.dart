@@ -82,12 +82,88 @@ class AssetsProvider extends ChangeNotifier {
         itemDecodedData.map((data) => createItem(data)).toList();
 
     final List<Item> rootItems = _associateComponentsAndAssets(items);
-    final List<String> itemsInLocation = _associateAssetsToLocation(rootItems);
+    final List<String> itemsInLocation =
+        _associateAssetsToLocation(rootItems, _locations);
 
     _removeItemsInLocation(rootItems, itemsInLocation);
-    _associateLocationsAndSubLocations();
+    _associateLocationsAndSubLocations(_locations);
 
     _items = rootItems;
+  }
+
+  List<dynamic> filterLocationsAndItems(
+      {SensorType? sensorType, ComponentStatus? status}) {
+    List<dynamic> filteredLocationsAndItems = [];
+
+    if (sensorType == null && status == null) {
+      filteredLocationsAndItems.addAll(_locations);
+      filteredLocationsAndItems.addAll(_items);
+      return filteredLocationsAndItems;
+    }
+
+    for (var location in _locations) {
+      if (_containsMatchingComponentInLocation(location, sensorType, status)) {
+        filteredLocationsAndItems.add(location);
+      }
+    }
+
+    for (var item in _items) {
+      if (_containsMatchingComponentInItem(item, sensorType, status)) {
+        filteredLocationsAndItems.add(item);
+      }
+    }
+
+    return filteredLocationsAndItems;
+  }
+
+  bool _containsMatchingComponentInItem(
+      Item item, SensorType? sensorType, ComponentStatus? status) {
+    if (item is Component &&
+        (sensorType == null || item.sensorType == sensorType) &&
+        (status == null || item.status == status)) {
+      return true;
+    }
+
+    if (item is Asset) {
+      for (var component in item.components) {
+        if (_containsMatchingComponentInItem(component, sensorType, status)) {
+          return true;
+        }
+      }
+
+      for (var subAsset in item.subAssets) {
+        if (_containsMatchingComponentInItem(subAsset, sensorType, status)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  bool _containsMatchingComponentInLocation(
+      Location location, SensorType? sensorType, ComponentStatus? status) {
+    for (var component in location.components) {
+      if ((sensorType == null || component.sensorType == sensorType) &&
+          (status == null || component.status == status)) {
+        return true;
+      }
+    }
+
+    for (var asset in location.assets) {
+      if (_containsMatchingComponentInItem(asset, sensorType, status)) {
+        return true;
+      }
+    }
+
+    for (var subLocation in location.subLocations) {
+      if (_containsMatchingComponentInLocation(
+          subLocation, sensorType, status)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   List<Item> _associateComponentsAndAssets(List<Item> items) {
@@ -108,12 +184,13 @@ class AssetsProvider extends ChangeNotifier {
     return rootItems;
   }
 
-  List<String> _associateAssetsToLocation(List<Item> rootItems) {
+  List<String> _associateAssetsToLocation(
+      List<Item> rootItems, List<Location> locations) {
     final List<String> itemsInLocation = [];
     for (Item item in rootItems) {
       if (item.locationId != null) {
         Location location =
-            _locations.firstWhere((element) => element.id == item.locationId);
+            locations.firstWhere((element) => element.id == item.locationId);
         itemsInLocation.add(item.id);
         if (item is Component) {
           location.components.add(item);
@@ -132,18 +209,18 @@ class AssetsProvider extends ChangeNotifier {
     }
   }
 
-  void _associateLocationsAndSubLocations() {
+  void _associateLocationsAndSubLocations(List<Location> locations) {
     List<String> subLocations = [];
     for (var location in _locations) {
       if (location.parentId != null) {
         subLocations.add(location.id);
         Location parent =
-            _locations.firstWhere((element) => element.id == location.parentId);
+            locations.firstWhere((element) => element.id == location.parentId);
         parent.subLocations.add(location);
       }
     }
     for (var locationId in subLocations) {
-      _locations.removeWhere((element) => element.id == locationId);
+      locations.removeWhere((element) => element.id == locationId);
     }
   }
 

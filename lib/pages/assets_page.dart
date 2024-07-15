@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tractian_app/models/asset.dart';
 import 'package:tractian_app/models/component.dart';
-import 'package:tractian_app/models/item.dart';
 import 'package:tractian_app/models/location.dart';
 import 'package:tractian_app/providers/assets_provider.dart';
 import 'package:tractian_app/widgets/filter_button.dart';
@@ -20,11 +19,12 @@ class _AssetsPageState extends State<AssetsPage> {
 
   late String companieId;
 
-  late List<Location> _locations;
-
-  late List<Item> _items;
+  late List<dynamic> _locationsAndItems;
 
   bool _isLoading = true;
+
+  SensorType? _selectedSensorType;
+  ComponentStatus? _selectedStatus;
 
   @override
   void didChangeDependencies() {
@@ -44,9 +44,24 @@ class _AssetsPageState extends State<AssetsPage> {
     await provider.loadAllData(companieId: companieId);
 
     setState(() {
-      _locations = provider.locations;
-      _items = provider.items;
+      _locationsAndItems = provider.filterLocationsAndItems(
+        sensorType: _selectedSensorType,
+        status: _selectedStatus,
+      );
       _isLoading = false;
+    });
+  }
+
+  void _applyFilter(SensorType? sensorType, ComponentStatus? status) {
+    setState(() {
+      _selectedSensorType = sensorType;
+      _selectedStatus = status;
+
+      final provider = Provider.of<AssetsProvider>(context, listen: false);
+      _locationsAndItems = provider.filterLocationsAndItems(
+        sensorType: _selectedSensorType,
+        status: _selectedStatus,
+      );
     });
   }
 
@@ -55,7 +70,7 @@ class _AssetsPageState extends State<AssetsPage> {
       title: component.name,
       iconImage: component.imageIcon,
       padding: leftPadding,
-        sensorType: component.sensorType,
+      sensorType: component.sensorType,
       statusWidget: component.statusWidget,
       children: const [],
     );
@@ -84,11 +99,7 @@ class _AssetsPageState extends State<AssetsPage> {
         ...location.subLocations
             .map((subLocation) => buildLocationNode(subLocation))
             .toList(),
-        ...location.assets
-            .map((asset) => buildAssetNode(
-                  asset,
-                ))
-            .toList(),
+        ...location.assets.map((asset) => buildAssetNode(asset)).toList(),
       ],
     );
   }
@@ -132,31 +143,42 @@ class _AssetsPageState extends State<AssetsPage> {
                         FilterButton(
                           icon: Icons.flash_on,
                           text: "Sensor de energia",
-                          onPressed: () {},
+                          onPressed: () {
+                            SensorType? sensorType =
+                                _selectedSensorType == SensorType.energy
+                                    ? null
+                                    : SensorType.energy;
+                            _applyFilter(sensorType, _selectedStatus);
+                          },
                         ),
                         const Spacer(flex: 1),
                         FilterButton(
                           icon: Icons.error,
                           text: "Crítico",
-                          onPressed: () {},
+                          onPressed: () {
+                            ComponentStatus? status =
+                                _selectedStatus == ComponentStatus.alert
+                                    ? null
+                                    : ComponentStatus.alert;
+                            _applyFilter(_selectedSensorType, status);
+                          },
                         ),
                         const Spacer(flex: 3),
-                      ])
+                      ]),
                     ],
                   ),
                 ),
                 const SizedBox(height: 10),
                 const Divider(thickness: 1.5),
-                ..._locations
-                    .map(
-                      (location) => buildLocationNode(location),
-                    )
-                    .toList(),
-                ..._items.map((item) {
-                  if (item is Asset) {
+                ..._locationsAndItems.map((item) {
+                  if (item is Location) {
+                    return buildLocationNode(item);
+                  } else if (item is Asset) {
                     return buildAssetNode(item);
+                  } else if (item is Component) {
+                    return buildComponentNode(item);
                   } else {
-                    return buildComponentNode(item as Component);
+                    return const SizedBox.shrink();
                   }
                 }).toList(),
               ],

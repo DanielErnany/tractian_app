@@ -16,21 +16,37 @@ class FilterButton extends StatefulWidget {
 }
 
 class _FilterButtonState extends State<FilterButton> {
+  bool _isActive = false;
+
+  void _onPressed() {
+    setState(() {
+      _isActive = !_isActive;
+    });
+    widget.onPressed();
+  }
+
   @override
   Widget build(BuildContext context) {
+    Color backgroundColor = _isActive ? Colors.blue : Colors.white;
+    Color iconColor = _isActive ? Colors.white : Colors.grey;
+    Color textColor = _isActive ? Colors.white : Colors.grey;
+    BorderSide? borderSide =
+        _isActive ? null : const BorderSide(color: Colors.grey);
+
     return ElevatedButton.icon(
-      onPressed: widget.onPressed,
+      onPressed: _onPressed,
       style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          side: const BorderSide(color: Colors.grey)),
+        backgroundColor: backgroundColor,
+        side: borderSide,
+      ),
       icon: Icon(
         widget.icon,
-        color: Colors.grey,
+        color: iconColor,
       ),
       label: Text(
         widget.text,
-        style: const TextStyle(
-          color: Colors.grey,
+        style: TextStyle(
+          color: textColor,
         ),
       ),
     );
