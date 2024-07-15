@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'package:tractian_app/models/asset.dart';
+import 'package:tractian_app/models/component.dart';
 import 'package:tractian_app/utils/images.dart';
 
 class Location {
@@ -10,15 +11,19 @@ class Location {
   final String name;
   final String? parentId;
   List<Location> subLocations;
+  List<Component> components;
   List<Asset> assets;
 
   Location({
+    List<Location>? subLocations,
+    List<Component>? components,
+    List<Asset>? assets,
     required this.id,
     required this.name,
     this.parentId,
-    required this.subLocations,
-    required this.assets,
-  });
+  })  : subLocations = subLocations ?? [],
+        components = components ?? [],
+        assets = assets ?? [];
 
   String get imageIcon => Images.locationIcon;
 
@@ -27,6 +32,7 @@ class Location {
     String? name,
     String? parentId,
     List<Location>? subLocations,
+    List<Component>? components,
     List<Asset>? assets,
   }) {
     return Location(
@@ -34,6 +40,7 @@ class Location {
       name: name ?? this.name,
       parentId: parentId ?? this.parentId,
       subLocations: subLocations ?? this.subLocations,
+      components: components ?? this.components,
       assets: assets ?? this.assets,
     );
   }
@@ -48,6 +55,7 @@ class Location {
     }
     result
         .addAll({'subLocations': subLocations.map((x) => x.toMap()).toList()});
+    result.addAll({'components': components.map((x) => x.toMap()).toList()});
     result.addAll({'assets': assets.map((x) => x.toMap()).toList()});
 
     return result;
@@ -58,13 +66,17 @@ class Location {
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       parentId: map['parentId'],
-      subLocations: map['subLocations'] == null
-          ? []
-          : List<Location>.from(
-              map['subLocations']?.map((x) => Location.fromMap(x))),
-      assets: map['assets'] == null
-          ? []
-          : List<Asset>.from(map['assets']?.map((x) => Asset.fromMap(x))),
+      subLocations: map['subLocations'] != null
+          ? List<Location>.from(
+              map['subLocations']?.map((x) => Location.fromMap(x)))
+          : [],
+      components: map['components'] != null
+          ? List<Component>.from(
+              map['components']?.map((x) => Component.fromMap(x)))
+          : [],
+      assets: map['assets'] != null
+          ? List<Asset>.from(map['assets']?.map((x) => Asset.fromMap(x)))
+          : [],
     );
   }
 
@@ -75,7 +87,7 @@ class Location {
 
   @override
   String toString() {
-    return 'Location(id: $id, name: $name, parentId: $parentId, subLocations: $subLocations, assets: $assets)';
+    return 'Location(id: $id, name: $name, parentId: $parentId, subLocations: $subLocations, components: $components, assets: $assets)';
   }
 
   @override
@@ -87,6 +99,7 @@ class Location {
         other.name == name &&
         other.parentId == parentId &&
         listEquals(other.subLocations, subLocations) &&
+        listEquals(other.components, components) &&
         listEquals(other.assets, assets);
   }
 
@@ -96,6 +109,7 @@ class Location {
         name.hashCode ^
         parentId.hashCode ^
         subLocations.hashCode ^
+        components.hashCode ^
         assets.hashCode;
   }
 }

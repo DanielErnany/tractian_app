@@ -3,78 +3,47 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'package:tractian_app/models/component.dart';
+import 'package:tractian_app/models/item.dart';
 import 'package:tractian_app/utils/images.dart';
 
-class Asset {
-  final String id;
-  final String name;
-  final String? locationId;
-  final String? parentId;
-
+class Asset extends Item {
   List<Component> components;
   List<Asset> subAssets;
 
   Asset({
-    required this.id,
-    required this.name,
-    this.locationId,
-    this.parentId,
-    required this.components,
-    required this.subAssets,
-  });
-
-  bool get hasChildren => components.isNotEmpty || subAssets.isNotEmpty;
-
-  String get imageIcon => Images.assetIcon;
-
-  Asset copyWith({
-    String? id,
-    String? name,
-    String? locationId,
+    required String id,
+    required String name,
     String? parentId,
+    String? locationId,
     List<Component>? components,
     List<Asset>? subAssets,
-  }) {
-    return Asset(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      locationId: locationId ?? this.locationId,
-      parentId: parentId ?? this.parentId,
-      components: components ?? this.components,
-      subAssets: subAssets ?? this.subAssets,
-    );
-  }
+  })  : components = components ?? [],
+        subAssets = subAssets ?? [],
+        super(id: id, name: name, parentId: parentId, locationId: locationId);
 
-  Map<String, dynamic> toMap() {
-    final result = <String, dynamic>{};
-
-    result.addAll({'id': id});
-    result.addAll({'name': name});
-    if (locationId != null) {
-      result.addAll({'locationId': locationId});
-    }
-    if (parentId != null) {
-      result.addAll({'parentId': parentId});
-    }
-    result.addAll({'components': components.map((x) => x.toMap()).toList()});
-    result.addAll({'subAssets': subAssets.map((x) => x.toMap()).toList()});
-
-    return result;
-  }
+  @override
+  String get imageIcon => Images.assetIcon;
 
   factory Asset.fromMap(Map<String, dynamic> map) {
+    List<Component>? components = map['components'] != null
+        ? List<Component>.from(
+            map['components']?.map((x) => Component.fromMap(x)))
+        : null;
+    List<Asset>? subAssets = map['subAssets'] != null
+        ? List<Asset>.from(map['subAssets']?.map((x) => Asset.fromMap(x)))
+        : null;
+
     return Asset(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       locationId: map['locationId'],
       parentId: map['parentId'],
-      components: List<Component>.from(
-          map['components']?.map((x) => Component.fromMap(x))),
-      subAssets:
-          List<Asset>.from(map['subAssets']?.map((x) => Asset.fromMap(x))),
+      components: components,
+      subAssets: subAssets,
     );
   }
 
+  @override
   String toJson() => json.encode(toMap());
 
   factory Asset.fromJson(String source) => Asset.fromMap(json.decode(source));

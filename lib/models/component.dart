@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import 'package:tractian_app/models/item.dart';
 import 'package:tractian_app/utils/images.dart';
 
 enum ComponentStatus {
@@ -62,21 +63,24 @@ enum SensorType {
   }
 }
 
-class Component {
-  final String id;
-  final String name;
+class Component extends Item {
+  final String sensorId;
   final SensorType sensorType;
   final ComponentStatus status;
-  final String? parentId;
+  final String gatewayId;
 
   Component({
-    required this.id,
-    required this.name,
+    required String id,
+    required String name,
+    String? parentId,
+    String? locationId,
+    required this.sensorId,
     required this.sensorType,
     required this.status,
-    this.parentId,
-  });
+    required this.gatewayId,
+  }) : super(id: id, name: name, parentId: parentId, locationId: locationId);
 
+  @override
   String get imageIcon => Images.componentIcon;
 
   IconData? get sensorTypeIcon => Icons.flash_on;
@@ -95,46 +99,20 @@ class Component {
         : null;
   }
 
-  Component copyWith({
-    String? id,
-    String? name,
-    SensorType? sensorType,
-    ComponentStatus? status,
-    String? parentId,
-  }) {
-    return Component(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      sensorType: sensorType ?? this.sensorType,
-      status: status ?? this.status,
-      parentId: parentId ?? this.parentId,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    final result = <String, dynamic>{};
-
-    result.addAll({'id': id});
-    result.addAll({'name': name});
-    result.addAll({'sensorType': sensorType.toString()});
-    result.addAll({'status': status.toString()});
-    if (parentId != null) {
-      result.addAll({'parentId': parentId});
-    }
-
-    return result;
-  }
-
   factory Component.fromMap(Map<String, dynamic> map) {
     return Component(
-      id: map['id'] ?? '',
-      name: map['name'] ?? '',
+      id: map['id'],
+      name: map['name'],
+      parentId: map['parentId'],
+      locationId: map['locationId'],
+      sensorId: map['sensorId'],
       sensorType: SensorType.fromString(map['sensorType'])!,
       status: ComponentStatus.fromString(map['status'])!,
-      parentId: map['parentId'],
+      gatewayId: map['gatewayId'],
     );
   }
 
+  @override
   String toJson() => json.encode(toMap());
 
   factory Component.fromJson(String source) =>
@@ -142,7 +120,7 @@ class Component {
 
   @override
   String toString() {
-    return 'Component(id: $id, name: $name, sensorType: $sensorType, status: $status, parentId: $parentId)';
+    return 'Component(sensorId: $sensorId, sensorType: $sensorType, status: $status, gatewayId: $gatewayId)';
   }
 
   @override
@@ -150,19 +128,17 @@ class Component {
     if (identical(this, other)) return true;
 
     return other is Component &&
-        other.id == id &&
-        other.name == name &&
+        other.sensorId == sensorId &&
         other.sensorType == sensorType &&
         other.status == status &&
-        other.parentId == parentId;
+        other.gatewayId == gatewayId;
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^
-        name.hashCode ^
+    return sensorId.hashCode ^
         sensorType.hashCode ^
         status.hashCode ^
-        parentId.hashCode;
+        gatewayId.hashCode;
   }
 }

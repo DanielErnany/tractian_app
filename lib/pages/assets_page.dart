@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tractian_app/models/asset.dart';
 import 'package:tractian_app/models/component.dart';
+import 'package:tractian_app/models/item.dart';
 import 'package:tractian_app/models/location.dart';
 import 'package:tractian_app/providers/assets_provider.dart';
 import 'package:tractian_app/widgets/filter_button.dart';
@@ -21,6 +22,8 @@ class _AssetsPageState extends State<AssetsPage> {
 
   late List<Location> _locations;
 
+  late List<Item> _items;
+
   bool _isLoading = true;
 
   @override
@@ -37,10 +40,12 @@ class _AssetsPageState extends State<AssetsPage> {
       _isLoading = true;
     });
     final provider = Provider.of<AssetsProvider>(context, listen: false);
-    await provider.loadLocations(companieId: companieId);
 
-    _locations = provider.locations;
+    await provider.loadAllData(companieId: companieId);
+
     setState(() {
+      _locations = provider.locations;
+      _items = provider.items;
       _isLoading = false;
     });
   }
@@ -90,36 +95,6 @@ class _AssetsPageState extends State<AssetsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Criando componentes
-    Component motorRTCoalAF01 = Component(
-        id: '1',
-        name: 'MOTOR RT COAL AF01',
-        sensorType: SensorType.vibration,
-        status: ComponentStatus.operating);
-    Component fanExternal = Component(
-        id: '2',
-        name: 'Fan - External',
-        sensorType: SensorType.vibration,
-        status: ComponentStatus.operating);
-
-    // Criando sub-ativos
-    Asset motorTC01CoalUnloadingAF02 =
-        Asset(id: '3', name: 'MOTOR TC01 COAL UNLOADING AF02');
-    motorTC01CoalUnloadingAF02.components.add(motorRTCoalAF01);
-
-    // Criando ativos
-    Asset conveyorBeltAssembly = Asset(id: '4', name: 'CONVEYOR BELT ASSEMBLY');
-    conveyorBeltAssembly.subAssets.add(motorTC01CoalUnloadingAF02);
-
-    // Criando localizações e sub-localizações
-    Location charcoalStorageSector =
-        Location(id: '5', name: 'CHARCOAL STORAGE SECTOR');
-    charcoalStorageSector.assets.add(conveyorBeltAssembly);
-
-    Location productionAreaRawMaterial =
-        Location(id: '6', name: 'PRODUCTION AREA - RAW MATERIAL');
-    productionAreaRawMaterial.subLocations.add(charcoalStorageSector);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Assets'),
@@ -173,17 +148,19 @@ class _AssetsPageState extends State<AssetsPage> {
                 const SizedBox(height: 10),
                 const Divider(thickness: 1.5),
                 ..._locations
-                    .map((location) => TreeView(
-                          title: location.name,
-                          padding: leftPadding,
-                          iconImage: location.imageIcon,
-                          children: location.subLocations
-                              .map((subLocation) => buildLocationNode(
-                                    subLocation,
-                                  ))
-                              .toList(),
-                        ))
+                    .map(
+                      (location) => buildLocationNode(location),
+                    )
                     .toList(),
+                ..._items.map((item) {
+                  if (item is Asset) {
+                    return buildAssetNode(item);
+                  } else {
+                    return buildComponentNode(item as Component);
+                  }
+                }).toList(),
+              ],
+            ),
     );
   }
 }

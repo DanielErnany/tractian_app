@@ -30,7 +30,6 @@ class MyApp extends StatelessWidget {
           AppRoutes.menuPage: (context) => const MenuPage(),
           AppRoutes.assetsPage: (context) => const AssetsPage(),
         },
-        // home: const MenuPage(),
       ),
     );
   }
