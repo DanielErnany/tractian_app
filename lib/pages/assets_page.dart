@@ -15,6 +15,8 @@ class AssetsPage extends StatefulWidget {
 }
 
 class _AssetsPageState extends State<AssetsPage> {
+  final TextEditingController _searchController = TextEditingController();
+
   EdgeInsets leftPadding = const EdgeInsets.only(left: 15);
 
   late String companieId;
@@ -49,6 +51,17 @@ class _AssetsPageState extends State<AssetsPage> {
         status: _selectedStatus,
       );
       _isLoading = false;
+    });
+  }
+
+  void _filterSearchResults(String query) {
+    final provider = Provider.of<AssetsProvider>(context, listen: false);
+    setState(() {
+      _locationsAndItems = provider.filterLocationsAndItems(
+        sensorType: _selectedSensorType,
+        status: _selectedStatus,
+        searchQuery: query,
+      );
     });
   }
 
@@ -132,9 +145,18 @@ class _AssetsPageState extends State<AssetsPage> {
                         padding: const EdgeInsets.only(left: 10),
                         color: const Color.fromRGBO(234, 239, 243, 1),
                         child: Row(
-                          children: const [
-                            Icon(Icons.search),
-                            Text("Buscar Ativo ou Local")
+                          children: [
+                            const Icon(Icons.search),
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: const InputDecoration(
+                                  hintText: "Buscar Ativo ou Local",
+                                  border: InputBorder.none,
+                                ),
+                                onChanged: _filterSearchResults,
+                              ),
+                            ),
                           ],
                         ),
                       ),

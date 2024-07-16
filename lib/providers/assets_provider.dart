@@ -91,24 +91,24 @@ class AssetsProvider extends ChangeNotifier {
     _items = rootItems;
   }
 
-  List<dynamic> filterLocationsAndItems(
-      {SensorType? sensorType, ComponentStatus? status}) {
+  List<dynamic> filterLocationsAndItems({
+    SensorType? sensorType,
+    ComponentStatus? status,
+    String? searchQuery,
+  }) {
     List<dynamic> filteredLocationsAndItems = [];
 
-    if (sensorType == null && status == null) {
-      filteredLocationsAndItems.addAll(_locations);
-      filteredLocationsAndItems.addAll(_items);
-      return filteredLocationsAndItems;
-    }
-
     for (var location in _locations) {
-      if (_containsMatchingComponentInLocation(location, sensorType, status)) {
-        filteredLocationsAndItems.add(location);
+      var filteredLocation =
+          _filterLocation(location, sensorType, status, searchQuery);
+      if (filteredLocation != null) {
+        filteredLocationsAndItems.add(filteredLocation);
       }
     }
 
     for (var item in _items) {
-      if (_containsMatchingComponentInItem(item, sensorType, status)) {
+      if (_containsMatchingComponentInItem(
+          item, sensorType, status, searchQuery)) {
         filteredLocationsAndItems.add(item);
       }
     }
@@ -116,50 +116,84 @@ class AssetsProvider extends ChangeNotifier {
     return filteredLocationsAndItems;
   }
 
+  Location? _filterLocation(
+    Location location,
+    SensorType? sensorType,
+    ComponentStatus? status,
+    String? searchQuery,
+  ) {
+    List<Asset> filteredAssets = [];
+
+    for (var asset in location.assets) {
+      if (_containsMatchingComponentInItem(
+          asset, sensorType, status, searchQuery)) {
+        filteredAssets.add(asset);
+      }
+    }
+
+    List<Location> filteredSubLocations = [];
+
+    for (var subLocation in location.subLocations) {
+      var filteredSubLocation =
+          _filterLocation(subLocation, sensorType, status, searchQuery);
+      if (filteredSubLocation != null) {
+        filteredSubLocations.add(filteredSubLocation);
+      }
+    }
+
+    bool matches = (searchQuery == null ||
+            location.name.toLowerCase().contains(searchQuery.toLowerCase())) &&
+        (sensorType == null || filteredAssets.isNotEmpty) &&
+        (status == null || filteredAssets.isNotEmpty);
+
+    if (matches ||
+        filteredAssets.isNotEmpty ||
+        filteredSubLocations.isNotEmpty) {
+      return Location(
+        id: location.id,
+        name: location.name,
+        components: location.components,
+        assets: filteredAssets,
+        subLocations: filteredSubLocations,
+        parentId: location.parentId,
+      );
+    }
+
+    return null;
+  }
+
   bool _containsMatchingComponentInItem(
-      Item item, SensorType? sensorType, ComponentStatus? status) {
+    Item item,
+    SensorType? sensorType,
+    ComponentStatus? status,
+    String? searchQuery,
+  ) {
     if (item is Component &&
         (sensorType == null || item.sensorType == sensorType) &&
-        (status == null || item.status == status)) {
+        (status == null || item.status == status) &&
+        (searchQuery == null ||
+            item.name.toLowerCase().contains(searchQuery.toLowerCase()))) {
       return true;
     }
 
     if (item is Asset) {
+      if (searchQuery != null &&
+          item.name.toLowerCase().contains(searchQuery.toLowerCase())) {
+        return true;
+      }
+
       for (var component in item.components) {
-        if (_containsMatchingComponentInItem(component, sensorType, status)) {
+        if (_containsMatchingComponentInItem(
+            component, sensorType, status, searchQuery)) {
           return true;
         }
       }
 
       for (var subAsset in item.subAssets) {
-        if (_containsMatchingComponentInItem(subAsset, sensorType, status)) {
+        if (_containsMatchingComponentInItem(
+            subAsset, sensorType, status, searchQuery)) {
           return true;
         }
-      }
-    }
-
-    return false;
-  }
-
-  bool _containsMatchingComponentInLocation(
-      Location location, SensorType? sensorType, ComponentStatus? status) {
-    for (var component in location.components) {
-      if ((sensorType == null || component.sensorType == sensorType) &&
-          (status == null || component.status == status)) {
-        return true;
-      }
-    }
-
-    for (var asset in location.assets) {
-      if (_containsMatchingComponentInItem(asset, sensorType, status)) {
-        return true;
-      }
-    }
-
-    for (var subLocation in location.subLocations) {
-      if (_containsMatchingComponentInLocation(
-          subLocation, sensorType, status)) {
-        return true;
       }
     }
 
