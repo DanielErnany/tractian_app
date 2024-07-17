@@ -113,6 +113,9 @@ class _AssetsPageState extends State<AssetsPage> {
             .map((subLocation) => buildLocationNode(subLocation))
             .toList(),
         ...location.assets.map((asset) => buildAssetNode(asset)).toList(),
+        ...location.components
+            .map((component) => buildComponentNode(component))
+            .toList(),
       ],
     );
   }
