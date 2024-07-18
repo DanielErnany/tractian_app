@@ -15,8 +15,6 @@ class AssetsPage extends StatefulWidget {
 }
 
 class _AssetsPageState extends State<AssetsPage> {
-  final TextEditingController _searchController = TextEditingController();
-
   EdgeInsets leftPadding = const EdgeInsets.only(left: 15);
 
   late String companieId;
@@ -27,6 +25,12 @@ class _AssetsPageState extends State<AssetsPage> {
 
   SensorType? _selectedSensorType;
   ComponentStatus? _selectedStatus;
+  String _searchQuery = '';
+
+  final TextEditingController _searchController = TextEditingController();
+
+  bool _isEnergyFilterActive = false;
+  bool _isAlertStatusFilterActive = false;
 
   @override
   void didChangeDependencies() {
@@ -49,18 +53,21 @@ class _AssetsPageState extends State<AssetsPage> {
       _locationsAndItems = provider.filterLocationsAndItems(
         sensorType: _selectedSensorType,
         status: _selectedStatus,
+        searchQuery: _searchQuery,
       );
       _isLoading = false;
     });
   }
 
   void _filterSearchResults(String query) {
-    final provider = Provider.of<AssetsProvider>(context, listen: false);
     setState(() {
+      _searchQuery = query;
+
+      final provider = Provider.of<AssetsProvider>(context, listen: false);
       _locationsAndItems = provider.filterLocationsAndItems(
         sensorType: _selectedSensorType,
         status: _selectedStatus,
-        searchQuery: query,
+        searchQuery: _searchQuery,
       );
     });
   }
@@ -74,6 +81,7 @@ class _AssetsPageState extends State<AssetsPage> {
       _locationsAndItems = provider.filterLocationsAndItems(
         sensorType: _selectedSensorType,
         status: _selectedStatus,
+        searchQuery: _searchQuery,
       );
     });
   }
@@ -112,10 +120,10 @@ class _AssetsPageState extends State<AssetsPage> {
         ...location.subLocations
             .map((subLocation) => buildLocationNode(subLocation))
             .toList(),
-        ...location.assets.map((asset) => buildAssetNode(asset)).toList(),
         ...location.components
             .map((component) => buildComponentNode(component))
             .toList(),
+        ...location.assets.map((asset) => buildAssetNode(asset)).toList(),
       ],
     );
   }
@@ -168,11 +176,13 @@ class _AssetsPageState extends State<AssetsPage> {
                         FilterButton(
                           icon: Icons.flash_on,
                           text: "Sensor de energia",
+                          isActive: _isEnergyFilterActive,
                           onPressed: () {
                             SensorType? sensorType =
                                 _selectedSensorType == SensorType.energy
                                     ? null
                                     : SensorType.energy;
+                            _isEnergyFilterActive = !_isEnergyFilterActive;
                             _applyFilter(sensorType, _selectedStatus);
                           },
                         ),
@@ -180,11 +190,14 @@ class _AssetsPageState extends State<AssetsPage> {
                         FilterButton(
                           icon: Icons.error,
                           text: "Crítico",
+                          isActive: _isAlertStatusFilterActive,
                           onPressed: () {
                             ComponentStatus? status =
                                 _selectedStatus == ComponentStatus.alert
                                     ? null
                                     : ComponentStatus.alert;
+                            _isAlertStatusFilterActive =
+                                !_isAlertStatusFilterActive;
                             _applyFilter(_selectedSensorType, status);
                           },
                         ),

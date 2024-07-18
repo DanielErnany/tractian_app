@@ -1,50 +1,39 @@
 import 'package:flutter/material.dart';
 
-class FilterButton extends StatefulWidget {
-  String text;
-  IconData icon;
-  Function() onPressed;
-  FilterButton({
+class FilterButton extends StatelessWidget {
+  final String text;
+  final IconData icon;
+  final bool isActive;
+  final Function() onPressed;
+
+  const FilterButton({
     Key? key,
     required this.text,
     required this.icon,
     required this.onPressed,
+    required this.isActive,
   }) : super(key: key);
 
   @override
-  State<FilterButton> createState() => _FilterButtonState();
-}
-
-class _FilterButtonState extends State<FilterButton> {
-  bool _isActive = false;
-
-  void _onPressed() {
-    setState(() {
-      _isActive = !_isActive;
-    });
-    widget.onPressed();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    Color backgroundColor = _isActive ? Colors.blue : Colors.white;
-    Color iconColor = _isActive ? Colors.white : Colors.grey;
-    Color textColor = _isActive ? Colors.white : Colors.grey;
+    Color backgroundColor = isActive ? Colors.blue : Colors.white;
+    Color iconColor = isActive ? Colors.white : Colors.grey;
+    Color textColor = isActive ? Colors.white : Colors.grey;
     BorderSide? borderSide =
-        _isActive ? null : const BorderSide(color: Colors.grey);
+        isActive ? null : const BorderSide(color: Colors.grey);
 
     return ElevatedButton.icon(
-      onPressed: _onPressed,
+      onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor,
         side: borderSide,
       ),
       icon: Icon(
-        widget.icon,
+        icon,
         color: iconColor,
       ),
       label: Text(
-        widget.text,
+        text,
         style: TextStyle(
           color: textColor,
         ),
