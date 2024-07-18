@@ -123,11 +123,19 @@ class AssetsProvider extends ChangeNotifier {
     String? searchQuery,
   ) {
     List<Asset> filteredAssets = [];
+    List<Component> filteredComponents = [];
 
     for (var asset in location.assets) {
       if (_containsMatchingComponentInItem(
           asset, sensorType, status, searchQuery)) {
         filteredAssets.add(asset);
+      }
+    }
+
+    for (var component in location.components) {
+      if (_containsMatchingComponentInItem(
+          component, sensorType, status, searchQuery)) {
+        filteredComponents.add(component);
       }
     }
 
@@ -143,16 +151,21 @@ class AssetsProvider extends ChangeNotifier {
 
     bool matches = (searchQuery == null ||
             location.name.toLowerCase().contains(searchQuery.toLowerCase())) &&
-        (sensorType == null || filteredAssets.isNotEmpty) &&
-        (status == null || filteredAssets.isNotEmpty);
+        (sensorType == null ||
+            filteredAssets.isNotEmpty ||
+            filteredComponents.isNotEmpty) &&
+        (status == null ||
+            filteredAssets.isNotEmpty ||
+            filteredComponents.isNotEmpty);
 
     if (matches ||
         filteredAssets.isNotEmpty ||
+        filteredComponents.isNotEmpty ||
         filteredSubLocations.isNotEmpty) {
       return Location(
         id: location.id,
         name: location.name,
-        components: location.components,
+        components: filteredComponents,
         assets: filteredAssets,
         subLocations: filteredSubLocations,
         parentId: location.parentId,
