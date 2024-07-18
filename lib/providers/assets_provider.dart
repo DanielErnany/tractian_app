@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:tractian_app/models/asset.dart';
 import 'package:tractian_app/models/companie.dart';
@@ -126,9 +125,9 @@ class AssetsProvider extends ChangeNotifier {
     List<Component> filteredComponents = [];
 
     for (var asset in location.assets) {
-      if (_containsMatchingComponentInItem(
-          asset, sensorType, status, searchQuery)) {
-        filteredAssets.add(asset);
+      var filteredAsset = _filterAsset(asset, sensorType, status, searchQuery);
+      if (filteredAsset != null) {
+        filteredAssets.add(filteredAsset);
       }
     }
 
@@ -140,7 +139,6 @@ class AssetsProvider extends ChangeNotifier {
     }
 
     List<Location> filteredSubLocations = [];
-
     for (var subLocation in location.subLocations) {
       var filteredSubLocation =
           _filterLocation(subLocation, sensorType, status, searchQuery);
@@ -175,6 +173,51 @@ class AssetsProvider extends ChangeNotifier {
     return null;
   }
 
+  Asset? _filterAsset(
+    Asset asset,
+    SensorType? sensorType,
+    ComponentStatus? status,
+    String? searchQuery,
+  ) {
+    List<Asset> filteredSubAssets = [];
+    List<Component> filteredComponents = [];
+
+    for (var subAsset in asset.subAssets) {
+      var filteredSubAsset =
+          _filterAsset(subAsset, sensorType, status, searchQuery);
+      if (filteredSubAsset != null) {
+        filteredSubAssets.add(filteredSubAsset);
+      }
+    }
+
+    for (var component in asset.components) {
+      if (_containsMatchingComponentInItem(
+          component, sensorType, status, searchQuery)) {
+        filteredComponents.add(component);
+      }
+    }
+
+    bool matches = (searchQuery == null ||
+            asset.name.toLowerCase().contains(searchQuery.toLowerCase())) &&
+        (sensorType == null || filteredComponents.isNotEmpty) &&
+        (status == null || filteredComponents.isNotEmpty);
+
+    if (matches ||
+        filteredComponents.isNotEmpty ||
+        filteredSubAssets.isNotEmpty) {
+      return Asset(
+        id: asset.id,
+        name: asset.name,
+        components: filteredComponents,
+        subAssets: filteredSubAssets,
+        locationId: asset.locationId,
+        parentId: asset.parentId,
+      );
+    }
+
+    return null;
+  }
+
   bool _containsMatchingComponentInItem(
     Item item,
     SensorType? sensorType,
@@ -190,11 +233,6 @@ class AssetsProvider extends ChangeNotifier {
     }
 
     if (item is Asset) {
-      if (searchQuery != null &&
-          item.name.toLowerCase().contains(searchQuery.toLowerCase())) {
-        return true;
-      }
-
       for (var component in item.components) {
         if (_containsMatchingComponentInItem(
             component, sensorType, status, searchQuery)) {
