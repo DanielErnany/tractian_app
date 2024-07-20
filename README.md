@@ -26,27 +26,28 @@ Para uma demonstração completa do aplicativo, assista ao vídeo a seguir:
 
 ## Estrutura do Projeto
 
+```plaintext
 lib/
 ├── models/
-│ ├── asset.dart
-│ ├── companie.dart
-│ ├── component.dart
-│ ├── item.dart
-│ ├── location.dart
+│   ├── asset.dart
+│   ├── companie.dart
+│   ├── component.dart
+│   ├── item.dart
+│   ├── location.dart
 ├── pages/
-│ ├── assets_page.dart
-│ ├── menu_page.dart
+│   ├── assets_page.dart
+│   ├── menu_page.dart
 ├── providers/
-│ ├── assets_provider.dart
+│   ├── assets_provider.dart
 ├── requests/
-│ ├── requests.dart
+│   ├── requests.dart
 ├── utils/
-│ ├── images.dart
-│ ├── routes.dart
+│   ├── images.dart
+│   ├── routes.dart
 ├── widgets/
-│ ├── companie_button.dart
-│ ├── filter_button.dart
-│ ├── tree_view.dart
+│   ├── companie_button.dart
+│   ├── filter_button.dart
+│   ├── tree_view.dart
 
 
 
