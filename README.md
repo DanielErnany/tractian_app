@@ -48,7 +48,7 @@ lib/
 │   ├── companie_button.dart
 │   ├── filter_button.dart
 │   ├── tree_view.dart
-
+```
 
 
 ## Como Executar o Projeto
